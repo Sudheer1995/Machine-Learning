@@ -1,3 +1,5 @@
+#!/usr/bin/env
+
 import csv
 import numpy
 
@@ -9,14 +11,14 @@ def load_data(train_file):
 		data = list(reader)
 		samples = len(data)
 
-		train_X = numpy.zeros((samples, 9), dtype=int)
-		train_Y = numpy.zeros((samples, 1), dtype=int)
+		train_X = numpy.zeros((samples, 8), dtype=numpy.float32)
+		train_Y = numpy.zeros((samples, 1), dtype=numpy.float32)
 
 		for i in range(samples):
 
-			row = map(int, data[i][0].split(','))
-			train_Y[i, 0] = row[9]
-			train_X[i, :] = numpy.asarray(row[: 9])
+			row = map(numpy.float32, data[i][0].split(','))
+			train_Y[i, 0] = row[10]
+			train_X[i, :] = numpy.asarray(row[1: 9])
 
 		print train_X.shape
 		print train_Y.shape

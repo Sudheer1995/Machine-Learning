@@ -1,3 +1,5 @@
+#!/usr/bin/env
+
 import csv
 import numpy
 
@@ -9,8 +11,8 @@ def load_data(train_file, test_file):
 		data = list(reader)
 		samples = len(data)
 
-		train_X = numpy.zeros((samples, 784), dtype=int)
-		train_Y = numpy.zeros((samples, 1), dtype=int)
+		train_X = numpy.zeros((samples, 784), dtype=numpy.int)
+		train_Y = numpy.zeros((samples, 1), dtype=numpy.int)
 
 		for i in range(samples):
 
