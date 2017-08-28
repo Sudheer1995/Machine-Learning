@@ -6,21 +6,38 @@ import numpy
 import csv
 import sys
 import math
+import operator
+import time
 
 class Node(object):
-	"""docstring for Node"""
+	"""Node in Decision Tree"""
 	def __init__(self, attributes):
-		self.attribute = attributes
-		self.child = {}
+		if type(attributes) == list:
+			self.child = {key: None for key in attributes}
+		else:
+			self.mean = attributes
+			self.child = {key: None for key in ['left', 'right']}
 
-	def set_child(children):
-		self.child.append(child)
+	def set_child(self, label, child):
+		self.child[label] = child
+
+	def get_child(self, label):
+		if type(label) == str:
+			return self.child[label]
+		else:
+			if label < self.mean:
+				return self.child['left']
+			else:
+				return self.child['right']
+
+	def get_keys(self):
+		return self.child.keys()
 
 class Entropy(object):
 	"""Entropy object for each subset"""
 	def __init__(self):
-		self.positive = 0
-		self.negative = 0
+		self.positive = 1
+		self.negative = 1
 
 	def size(self):
 		return self.positive+self.negative
@@ -81,15 +98,53 @@ def entropy(data, label, typ):
 
 def train_tree(train_data):
 	"""trains decision tree"""
+	if sum(train_data['left']) == 0:
+		return 0
+
+	if sum(train_data['left']) == len(train_data['left']):
+		return 1
+		
+	print train_data.keys()
+	randomness = {key: 0 for key in train_data.keys() if not key == 'left'}
 	for key in train_data.keys():
-		if not key == 'left':
+		if not key == 'left':	
 			if type(train_data[key][0]) == str:
-				print entropy(train_data[key], train_data['left'], 'string')
+				randomness[key] += entropy(train_data[key], train_data['left'], 'string')
 			else:
-				print entropy(train_data[key], train_data['left'], 'numerical')
+				randomness[key] += entropy(train_data[key], train_data['left'], 'numerical')
+
+	label = max(randomness.iteritems(), key=operator.itemgetter(1))[0]
+	print label	
+	time.sleep(2)
+	if type(train_data[label][0]) == str:
+		elements = list(set(train_data[label]))
+		node = Node(elements)
+		for elem in elements:
+			indices = [i for i in range(len(train_data[label])) if train_data[label][i] == elem]
+			next_train_data = {key: None for key in train_data.keys() if not key == label}
+			for key in next_train_data.keys():
+				next_train_data[key] = [train_data[key][i] for i in indices]
+			node.set_child(elem, train_tree(next_train_data))
+		return node	
+	else:
+		elements = ['left', 'right']
+		mean = sum(train_data[label])/len(train_data[label])
+		node = Node(mean)
+		indices = [i for i in range(len(train_data[label])) if train_data[label][i] < mean]
+		for elem in elements:
+			next_train_data = {key: None for key in train_data.keys()}
+			if elem == 'left':
+				for key in next_train_data.keys():
+					next_train_data[key] = [train_data[key][i] for i in indices]
+			else:
+				for key in next_train_data.keys():
+					next_train_data[key] = [train_data[key][i] for i in range(len(train_data[label])) if not i in indices]	
+			node.set_child(elem, train_tree(next_train_data))
+		return node
+
 
 if __name__ == '__main__':
 	train_file = sys.argv[1]
 	test_file = sys.argv[2]
 	train_data = load_data(train_file, test_file)
-	train_tree(train_data)
+	root = train_tree(train_data)

@@ -5,29 +5,32 @@ from numpy import linalg
 import numpy
 import csv
 import sys
-import time
 
-def load_data(train_file):
+def load_data(train_file, test_file):
 	"""loads data from csv file"""
 	with open(train_file) as f:
 		reader = csv.reader(f, delimiter=' ', quotechar='|')
 		data = list(reader)
 		samples = len(data)
-		train_X = numpy.zeros((samples, 8), dtype=numpy.float32)
+		train_X = numpy.zeros((samples, 9), dtype=numpy.float32)
 		train_Y = numpy.zeros((samples, 1), dtype=numpy.float32)
 		for i in range(samples):
 			row = map(numpy.float32, data[i][0].split(','))
 			train_Y[i, 0] = row[10]
-			train_X[i, :] = numpy.asarray(row[1: 9])
-
-		test_X = train_X[int(3*samples/4)+1: , :]
-		test_X = numpy.append(numpy.ones((test_X.shape[0], 1)), test_X, axis=1)
-		test_Y = train_Y[int(3*samples/4)+1: , :]
-		train_X = train_X[:int(3*samples/4), :]
+			train_X[i, :] = numpy.asarray(row[1: 10])
 		train_X = numpy.append(numpy.ones((train_X.shape[0], 1)), train_X, axis=1)
-		train_Y = train_Y[:int(3*samples/4), :]
+	
+	with open(test_file) as f:
+		reader = csv.reader(f, delimiter=' ', quotechar='|')
+		data = list(reader)
+		samples = len(data)
+		test_X = numpy.zeros((samples, 9), dtype=numpy.float32)
+		for i in range(samples):
+			row = map(numpy.float32, data[i][0].split(','))
+			test_X[i, :] = numpy.asarray(row[1: ])			
+		test_X = numpy.append(numpy.ones((test_X.shape[0], 1)), test_X, axis=1)
 
-		return train_X, train_Y, test_X, test_Y
+		return train_X, train_Y, test_X
 
 def train_weights(data, labels, margin, ep):
 	"""trains weights for batch perceptron with relaxation & margin"""
@@ -50,29 +53,22 @@ def train_weights(data, labels, margin, ep):
 
 	return weights, (1-len(prev_i)/data.shape[0])*100
 
-def test_weights(weights, data, labels, margin):
+def test_weights(weights, data, margin):
 	"""returns results on test data"""
-	labels -= 3
 	errors = numpy.matmul(data, weights)
-	signs = numpy.multiply(errors, labels)
-	i, j = numpy.where(signs < margin)	
-
-	return (1-i.shape[0]/labels.shape[0])*100
+	for i in range(errors.shape[0]):
+		if errors[i, 0] < margin:
+			print 2
+		else:
+			print 4
 
 if __name__ == '__main__':
 	
-	start_time = time.time()
 	train = sys.argv[1]
 	test = sys.argv[2]
-	epoch = [10, 100, 1000, 10000, 100000]
-	for ep in epoch:
-		for margin in range(10):
 	
-			print "Margin: ", margin
-			train_X, train_Y, test_X, test_Y = load_data(train)
-			weights, train_accuracy = train_weights(train_X, train_Y, margin, ep)
-			print "Train Accuaracy: ", train_accuracy
-			test_accuracy = test_weights(weights, test_X, test_Y, margin)
-			print "Test Accuracy: ", test_accuracy
-
-	print "----Time Elapsed:---- ",(time.time()-start_time)
+	ep = 1000
+	margin = 3
+	train_X, train_Y, test_X = load_data(train, test)
+	weights, train_accuracy = train_weights(train_X, train_Y, margin, ep)
+	test_accuracy = test_weights(weights, test_X, margin)

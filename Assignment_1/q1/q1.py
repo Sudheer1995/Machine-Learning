@@ -24,15 +24,13 @@ def load_data(train_file, test_file):
 		reader = csv.reader(f, delimiter=' ', quotechar='|')
 		data = list(reader)
 		samples = len(data)
-		test_X = numpy.zeros((samples, 784), dtype=int)
-		test_Y = numpy.zeros((samples, 1), dtype=int)
+		test_X = numpy.zeros((samples, 783), dtype=int)
 		for i in range(samples):
 			row = map(int, data[i][0].split(','))
-			test_Y[i, 0] = row[0]
 			test_X[i, :] = numpy.asarray(row[1: ])
 		test_X = numpy.append(numpy.ones((test_X.shape[0], 1)), test_X, axis=1)
 		
-		return (train_X, train_Y, test_X, test_Y)
+		return (train_X, train_Y, test_X)
 
 def train_weights(data, labels, sm_margin, bm_margin):
 	"""trains weights for four perceptrons"""
@@ -67,33 +65,26 @@ def train_weights(data, labels, sm_margin, bm_margin):
 
 	return (s_weights, sm_weights, b_weights, bm_weights)
 
-def test_weights(weights, data, labels, margin):
+def test_weights(weights, data, margin):
 	"""returns results on test data"""
+	data = numpy.append(numpy.ones((data.shape[0], 1)), data, axis=1)
 	errors = numpy.matmul(data, weights)
-	labels = 2*labels-1
-	signs = numpy.multiply(errors, labels)
-	i, j = numpy.where(signs < margin)
-
-	return (1-i.shape[0]/labels.shape[0])*100
-
+	for i in range(errors.shape[0]):
+		if errors[i, 0] <= margin:
+			print 0
+		else:
+			print 1
+	
 if __name__ == '__main__':
 
 	start_time = time.time()
 	train = sys.argv[1]
 	test = sys.argv[2]
 	margin = 2
-	train_X, train_Y, test_X, test_Y = load_data(train, test)
+	train_X, train_Y, test_X = load_data(train, test)
 
-	print 'Margin: ', margin
 	s_weights, sm_weights, b_weights, bm_weights = train_weights(train_X, train_Y, margin, margin)
-	s_accuracy = test_weights(s_weights, test_X, test_Y, 0)
-	sm_accuracy = test_weights(sm_weights, test_X, test_Y, margin)
-	b_accuracy = test_weights(b_weights, test_X, test_Y, 0)
-	bm_accuracy = test_weights(bm_weights, test_X, test_Y, margin)
-
-	print 's_accuracy', s_accuracy
-	print 'sm_accuracy', sm_accuracy
-	print 'b_accuracy', b_accuracy
-	print 'bm_accuracy', bm_accuracy
-
-	print "---Time Elapsed--- ", (time.time()-start_time)
+	s_accuracy = test_weights(s_weights, test_X, 0)
+	sm_accuracy = test_weights(sm_weights, test_X, margin)
+	b_accuracy = test_weights(b_weights, test_X, 0)
+	bm_accuracy = test_weights(bm_weights, test_X, margin)
