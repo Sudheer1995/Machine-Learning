@@ -46,7 +46,7 @@ class KNN(object):
 		self.Y_test = testVec.Y
 		self.metric = Metrics('accuracy')
 
-	def classify(self, K):
+	def classify(self, K, files):
 		"""Takes input X_train, Y_train, X_test and Y_test and displays the accuracies."""
 		prediction = numpy.zeros((self.X_test.shape[0], 1), dtype=numpy.int)
 		for i in range(self.X_test.shape[0]):
@@ -55,7 +55,9 @@ class KNN(object):
 			distances = numpy.sum(numpy.square(T - self.X_train), axis=1)
 			indices = numpy.argsort(distances)
 			prediction[i, 0] = self.Y_train[self.get_label(K, distances, indices), 0]
-
+		for i in range(prediction.shape[0]):
+			print files[prediction[i, 0]]
+				
 
 	def get_label(self, K, distances, indices):
 		"""get closest & frequent cluster label"""
@@ -85,6 +87,7 @@ class Metrics(object):
 		for i in range(y_pred.shape[0]): 	
 			self.conf_matrix[y_pred[i, 0]-1, y_test[i, 0]-1] += 1
 
+
 	def accuracy(self):
 		"""Implements the accuracy function"""
 		correct = 0
@@ -108,17 +111,15 @@ class Metrics(object):
 
 if __name__ == '__main__':
 	
-	datadir = '../datasets/q4/'
-	classes = ['galsworthy/', 'galsworthy_2/', 'mill/', 'shelley/', 'thackerey/', 'thackerey_2/', 'wordsmith_prose/', 'cia/', 'johnfranklinjameson/', 'diplomaticcorr/']
-	inputdir = ['train/', 'test/']
-
+	
+	train = sys.argv[1]
+	test = sys.argv[2]
 	vocab = 0
 	margin = 101
 	bag_of_words =  []
-	for each_class in classes:
-		for file in os.listdir(datadir+inputdir[0]+each_class):
-
-			f = open(datadir+inputdir[0]+each_class+file, 'r')
+	for classes in os.listdir(train):
+		for file in os.listdir(train+classes):
+			f = open(train+classes+str('/')+file, 'r')
 			for line in f:
 				bag_of_words.extend(line.split())
 	
@@ -129,25 +130,27 @@ if __name__ == '__main__':
 	vocab = len(vocabulary)
 
 	trainsz = 0
-	for each_class in classes:
-		trainsz += len(os.listdir(datadir+inputdir[0]+each_class))
+	for each_class in os.listdir(train):
+		trainsz += len(os.listdir(train+each_class))
 
 	testsz = 0
-	for each_class in classes:
-		testsz += len(os.listdir(datadir+inputdir[1]+each_class))
+	for each_class in os.listdir(test):
+		testsz += len(os.listdir(test+each_class))
 
 	trainVec = FeatureVector(vocab, trainsz)
 	testVec = FeatureVector(vocab, testsz)
 
-	for idir in inputdir:
+	authors = os.listdir(train)
+	files = {i+1: authors[i] for i in range(len(authors))}
+	for idir in [train, test]:
 		classid = 1
 		file_num = 0
-		for c in classes:
-			listing = os.listdir(datadir+idir+c)
+		for c in os.listdir(idir):
+			listing = os.listdir(idir+c)
 			for filename in listing:
-				f = open(datadir+idir+c+filename, 'r')
+				f = open(idir+c+str('/')+filename, 'r')
 				inputs = [word for line in f for word in line.split()]
-				if idir == 'train/':
+				if idir == train:
 					trainVec.make_featurevector(file_num, inputs, classid, vocabulary)
 				else:
 					testVec.make_featurevector(file_num, inputs, classid, vocabulary)
@@ -156,4 +159,4 @@ if __name__ == '__main__':
 
 	K = 3
 	knn = KNN(trainVec, testVec)
-	knn.classify(K)
+	knn.classify(K, files)

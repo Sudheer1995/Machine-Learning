@@ -34,24 +34,26 @@ def load_data(train_file, test_file):
 
 def train_weights(data, labels, margin, ep):
 	"""trains weights for batch perceptron with relaxation & margin"""
+	size = 0
 	epoch = 0
 	labels -= 3
 	data = numpy.multiply(labels, data)
-	prev_i = range(data.shape[0])
 	weights = numpy.random.rand(data.shape[1], 1)
+	sm_weights = numpy.zeros((ep, data.shape[1]))
+	counts = numpy.zeros((ep, 1))
 	while epoch <= ep:
-		errors = numpy.matmul(data, weights)
-		i, j = numpy.where(errors < margin)
-		if len(prev_i) > len(i):
-			for k in i:
-				misclassified = data[k, :].reshape(weights.shape[0], 1)
-				error = numpy.matmul(numpy.transpose(weights), misclassified)
-				Z = misclassified * (margin - error[0, 0])/(linalg.norm(misclassified)**2)
-				weights = numpy.add(weights, Z)
-			prev_i = i
+		k = epoch % data.shape[0]
+		error = numpy.matmul(data[k, :].reshape(1, data.shape[1]), weights)
+		if error < margin:
+			sm_weights[size, :] = weights.reshape(1, data.shape[1])
+			Z = data[k, :] * (margin - error[0, 0])/(linalg.norm(data[k, :])**2)
+			weights = numpy.add(weights, Z.reshape(data.shape[1], 1))
+			size += 1
+		else:
+			counts[size, 0] += 1
 		epoch += 1
 
-	return weights, (1-len(prev_i)/data.shape[0])*100
+	return weights, sm_weights[:size, :], counts[:size, :]
 
 def test_weights(weights, data, margin):
 	"""returns results on test data"""
@@ -62,13 +64,25 @@ def test_weights(weights, data, margin):
 		else:
 			print 4
 
+def test_modified_weights(weights, counts, data):
+	"""returns results on test data"""
+	for i in range(data.shape[0]):
+		temp = data[i, :].reshape(1, data.shape[1])*weights
+		errors = numpy.sum(temp, axis=1)
+		if numpy.sum(counts*numpy.sign(errors)) < 0:
+			print 2
+		else:
+			print 4
+			
+
 if __name__ == '__main__':
 	
 	train = sys.argv[1]
 	test = sys.argv[2]
 	
-	ep = 1000
-	margin = 3
+	ep = 100000
+	margin = 1
 	train_X, train_Y, test_X = load_data(train, test)
-	weights, train_accuracy = train_weights(train_X, train_Y, margin, ep)
-	test_accuracy = test_weights(weights, test_X, margin)
+	s_weights, sm_weights, counts = train_weights(train_X, train_Y, margin, ep)
+	test_weights(s_weights, test_X, margin)
+	test_modified_weights(sm_weights, counts, test_X)
