@@ -4,7 +4,6 @@ from __future__ import division
 import csv
 import numpy
 import sys 
-import time
 
 def load_data(train_file, test_file):
 	"""loads data from csv file"""
@@ -77,7 +76,6 @@ def test_weights(weights, data, margin):
 	
 if __name__ == '__main__':
 
-	start_time = time.time()
 	train = sys.argv[1]
 	test = sys.argv[2]
 	margin = 2

@@ -57,7 +57,6 @@ class KNN(object):
 			prediction[i, 0] = self.Y_train[self.get_label(K, distances, indices), 0]
 		for i in range(prediction.shape[0]):
 			print files[prediction[i, 0]]
-				
 
 	def get_label(self, K, distances, indices):
 		"""get closest & frequent cluster label"""
@@ -110,7 +109,6 @@ class Metrics(object):
 		return self.f1_score
 
 if __name__ == '__main__':
-	
 	
 	train = sys.argv[1]
 	test = sys.argv[2]
