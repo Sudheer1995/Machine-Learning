@@ -11,6 +11,7 @@ Skeleton code for visualizing 2D points and writing a kernel for mapping
 them to a higher dimensional space. Use the perceptron given by sklearn and
 prove that the kernel mapping makes the points linearly separable, using a
 simple perceptron.
+This is your final submission file.
 
 Dataset is generated manually.
 
@@ -48,7 +49,7 @@ def get_input_data(filename):
     with open(filename, 'r') as f:
         for line in f:
             line = line.strip().split()
-            Y.append(line[0])
+            Y.append(int(line[0]))
             X.append([float(x) for x in line[1:]])
     X = np.asarray(X); Y = np.asarray(Y)
 
@@ -145,11 +146,11 @@ def perceptron(X, Y):
     ==========================================================================
     """
 
-    model = Perceptron(penalty=None, alpha=0.0001, fit_intercept=True, max_iter=None, 
+    clf = Perceptron(penalty=None, alpha=0.0001, fit_intercept=True, max_iter=None, 
                         tol=None, shuffle=True, verbose=0, eta0=1.0, n_jobs=1, random_state=0, 
                         class_weight=None, warm_start=False, n_iter=None)
-    model.fit(kernelX, Y, coef_init=None, intercept_init=None, sample_weight=None)
-    train_predictions =  model.predict(kernelX)
+    clf.fit(kernelX, Y, coef_init=None, intercept_init=None, sample_weight=None)
+    train_predictions =  clf.predict(kernelX)
     train_labels = Y
 
     """
@@ -178,20 +179,16 @@ def perceptron(X, Y):
         x, y, z = kernelX[i]
         ax.scatter(x, y, z, c=color(Y[i]), marker=mark(Y[i]))
 
-    W = model.coef_[0]                # 3D normal
-    intercept = model.intercept_[0]   # Distance from origin
+    W = clf.coef_[0]                # 3D normal
+    intercept = clf.intercept_[0]   # Distance from origin
 
-    xx, yy = np.meshgrid(kernelX, Y)
-    xx = xx.astype(float)
-    yy = yy.astype(float)
-
+    xx, yy = np.meshgrid(kernelX[:, 0], kernelX[:, 1])
     """
     Derived from a*x + b*y + c*z + d = 0. (a, b, c) is the normal and we know
     x and y values. d is the distance from origin, or the intercept. Hence, value
     of z => (-a*x - b*y - d) / c.
     Source: https://stackoverflow.com/questions/3461869/plot-a-plane-based-on-a-normal-vector-and-a-point-in-matlab-or-matplotlib
     """
-    
     zz = ((-W[0] * xx) + (-W[1] * yy) + (-intercept)) * 1. / W[2]
 
     ax.plot_surface(xx, yy, zz, rstride=10, cstride=10, color='g', antialiased=False,

@@ -19,6 +19,8 @@ from sklearn import svm
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import classification_report
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -57,7 +59,7 @@ def get_input_data(filename):
     ===========================================================================
     """
 
-    # YOUR CODE GOES HERE
+    X = preprocessing.scale(X)
 
     """
     ===========================================================================
@@ -82,7 +84,10 @@ def calculate_metrics(predictions, labels):
     ===========================================================================
     """
 
-    # YOUR CODE GOES HERE
+    tup = precision_recall_fscore_support(labels, predictions, average='micro')
+    precision = tup[0] 
+    recall = tup[1]
+    f1 = tup[2]
 
     """
     ===========================================================================
@@ -142,7 +147,9 @@ def SVM(train_data,
     ==========================================================================
     """
 
-    # YOUR CODE GOES HERE
+    model = svm.SVC(C=2.0, kernel=kernel, degree=3, coef0=0.1)
+    model.fit(train_data, train_labels)
+    train_predictions = model.predict(train_data)
 
     """
     ==========================================================================
@@ -153,7 +160,6 @@ def SVM(train_data,
     respective variable names.
     """
     train_accuracy = calculate_accuracy(train_predictions, train_labels)
-    print "Training Accuracy: %.4f" % (train_accuracy)
 
     """
     Use the trained model to perform testing. Using the output of the testing
@@ -165,13 +171,15 @@ def SVM(train_data,
     ==========================================================================
     """
 
-    # YOUR CODE GOES HERE
+    test_predictions = model.predict(test_data)
+    test_accuracy = calculate_accuracy(test_predictions, test_labels)
+    precision, recall, f1 = calculate_metrics(test_predictions, test_labels)
 
     """
     ==========================================================================
     """
 
-    return accuracy, precision, recall, f1
+    return test_accuracy, precision, recall, f1
 
 
 if __name__ == '__main__':
@@ -193,7 +201,7 @@ if __name__ == '__main__':
             sys.exit()
 
     # Set the value for svm_kernel as required.
-    svm_kernel = 'linear'
+    svm_kernel = 'rbf'
 
     """
     Get the input data using the provided function. Store the X and Y returned
@@ -201,7 +209,7 @@ if __name__ == '__main__':
     ==========================================================================
     """
 
-    # YOUR CODE GOES HERE
+    X_data, Y_data = get_input_data(filename)
 
     """
     ==========================================================================
@@ -218,8 +226,6 @@ if __name__ == '__main__':
     accumulated_metrics = []
     fold = 1
     for train_indices, test_indices in sss.split(X_data, Y_data):
-        print "Fold%d -> Number of training samples: %d | Number of testing "\
-            "samples: %d" % (fold, len(train_indices), len(test_indices))
         train_data, test_data = X_data[train_indices], X_data[test_indices]
         train_labels, test_labels = Y_data[train_indices], Y_data[test_indices]
         accumulated_metrics.append(
@@ -231,9 +237,14 @@ if __name__ == '__main__':
     Print out the accumulated metrics in a good format.
     ==========================================================================
     """
+    accuracy = 0; precision = 0; recall = 0; f1_score = 0;
+    for i in range(len(accumulated_metrics)):
+        accuracy += accumulated_metrics[i][0]*100
+        precision += accumulated_metrics[i][1]*100
+        recall += accumulated_metrics[i][2]*100
+        f1_score += accumulated_metrics[i][3]*100
 
-    # YOUR CODE GOES HERE
-
+    print str(accuracy//5)+" , "+str(precision//5)+" , "+str(recall//5)+" , "+str(f1_score//5)
     """
     ==========================================================================
     """

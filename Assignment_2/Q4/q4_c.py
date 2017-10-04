@@ -21,9 +21,8 @@ def get_data(train_set, test_set):
 			test.append([float(elem) for elem in row])
 		test = np.asarray(test)
 		test_X = test[:, :-1]
-		test_Y = test[:, -1]
 
-	return train_X, train_Y, test_X, test_Y
+	return train_X, train_Y, test_X
 
 def train(X, y):
 	# Elastic Net
@@ -33,16 +32,16 @@ def train(X, y):
 	lin_reg.fit(X, y)
 	return lin_reg
 
-def test(model, X, y):
+def test(model, X):
 	y_pred = model.predict(X)
 	y_pred = np.asarray([1 if y_pred[i] > 0.5 else 0 for i in range(y_pred.shape[0])])
-	return accuracy_score(y, y_pred, normalize=True, sample_weight=None)*100
+	for i in range(y_pred.shape[0]):
+		print y_pred[i]
 
 if __name__ == '__main__':
 
 	train_file = sys.argv[1]
 	test_file = sys.argv[2]
-	train_X, train_Y, test_X, test_Y = get_data(train_file, test_file)
+	train_X, train_Y, test_X = get_data(train_file, test_file)
 	model = train(train_X, train_Y)
-	accuracy = test(model, test_X, test_Y)
-	print "--Accuracy--: ", accuracy
+	test(model, test_X)
