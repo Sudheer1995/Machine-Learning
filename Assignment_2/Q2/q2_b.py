@@ -39,6 +39,9 @@ def train(x_train, y_train, input_shp, activation_function='relu'):
 		gamma_initializer='ones', moving_mean_initializer='zeros', moving_variance_initializer='ones', beta_regularizer=None, 
 		gamma_regularizer=None, beta_constraint=None, gamma_constraint=None))
 	model.add(Dense(features, activation=activation_function))
+	model.add(BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001, center=True, scale=True, beta_initializer='zeros', 
+		gamma_initializer='ones', moving_mean_initializer='zeros', moving_variance_initializer='ones', beta_regularizer=None, 
+		gamma_regularizer=None, beta_constraint=None, gamma_constraint=None))
 	model.add(Dropout(0.5))
 	model.add(Dense(classes, activation='softmax'))
 	model.compile(loss='categorical_crossentropy', optimizer='Adamax', metrics=['accuracy'])

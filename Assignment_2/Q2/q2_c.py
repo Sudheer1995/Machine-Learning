@@ -6,13 +6,16 @@ import sys
 import cPickle
 import numpy as np
 
-def unpickle(file):
+def unpickle(file, train=False):
     with open(file, 'rb') as fo:
-        dict = cPickle.load(fo)
-    if 'label_names' in dict.keys():
-    	return dict['label_names']
-    else:
-    	return dict['data'], dict['labels']
+		dict = cPickle.load(fo)
+		if train == True:
+			if 'label_names' in dict.keys():
+				return dict['label_names']
+			else:
+				return dict['data'], dict['labels']
+		else:
+			return dict['data']
 
 def get_data(X):
 	model = load_model('NN1.h5')
@@ -27,23 +30,22 @@ def train(X, y):
 	clf.fit(get_data(X), y, sample_weight=None)
 	return clf
 
-def test(clf, X, y):
+def test(clf, X, label_names):
 	y_pred = clf.predict(get_data(X))
-	accuracy = accuracy_score(y, y_pred)
-	print "--Accuracy--: ", accuracy
+	for i in range(y_pred.shape[0]):
+		print label_names[y_pred[i]]
 
 if __name__ == '__main__':
 
 	data_dir = sys.argv[1]
 	test_file = sys.argv[2]
-	label_names = unpickle("batches.meta")
+	label_names = unpickle("batches.meta", True)
 	for i in range(5):
-		data, labels = unpickle(str(data_dir)+"data_batch_"+str(i+1))
+		data, labels = unpickle(str(data_dir)+"data_batch_"+str(i+1), True)
 		X = np.asarray(data[:, :]).reshape(10000, 32, 32, 3)
 		Y = labels[:]
 		clf = train(X, Y)
 
-	data, labels = unpickle(test_file)
+	data = unpickle(test_file)
 	X = np.asarray(data[:, :]).reshape(10000, 32, 32, 3)
-	Y = labels[:]
-	test(clf, X, Y)
+	test(clf, X, label_names)
